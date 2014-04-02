@@ -31,24 +31,6 @@ class DdeboerDocumentManipulationExtension extends Extension
             'ddeboer_document_manipulation.pdftk.binary',
             $config['pdftk']['binary']
         );
-
-        if (isset($config['livedocx'])) {
-            $this->addLiveDocx($config['livedocx'], $container);
-            $container
-                ->getDefinition('ddeboer_document_manipulation.manipulator.live_docx')
-                ->setAbstract(false)
-                ->addArgument(new Reference('ddeboer_document.manipulation.manipulator.live_docx.mail_merge'));
-        }
     }
 
-    private function addLiveDocx(array $config, ContainerBuilder $container)
-    {
-        $definition = $container->getDefinition('ddeboer_document.manipulation.manipulator.live_docx.mail_merge');
-        $definition->setAbstract(false);
-        $definition->addMethodCall('setUsername', array($config['username']));
-        $definition->addMethodCall('setPassword', array($config['password']));
-        $definition->addMethodCall('setWsdl', array($config['wsdl']));
-
-        return $definition;
-    }
 }

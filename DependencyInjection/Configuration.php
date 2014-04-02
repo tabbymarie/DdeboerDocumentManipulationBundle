@@ -22,13 +22,6 @@ class Configuration implements ConfigurationInterface
 
         $rootNode
             ->children()
-                ->arrayNode('livedocx')
-                    ->children()
-                        ->scalarNode('username')->isRequired()->end()
-                        ->scalarNode('password')->isRequired()->end()
-                        ->scalarNode('wsdl')->defaultValue('https://api.livedocx.com/2.1/mailmerge.asmx?wsdl')->end()
-                    ->end()
-                ->end()
                 ->arrayNode('pdftk')
                     ->addDefaultsIfNotSet()
                     ->children()

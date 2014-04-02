@@ -27,23 +27,7 @@ class DocumentTest extends WebTestCase
             ->get('ddeboer_document_manipulation.factory');
     }
 
-    public function testMergeDocx()
-    {
-        $document = $this->factory->open(__DIR__.'/../Fixtures/document.docx');
-        $data = new DocumentData(array('Name' => 'Bond', 'FirstName' => 'James'));
-        $document
-            ->merge($data)
-            ->save('/tmp/output1.pdf');
-    }
 
-    public function testMergeDoc()
-    {
-        $document = $this->factory->open(__DIR__.'/../Fixtures/document.doc');
-        $data = new DocumentData(array('Name' => 'Bond', 'FirstName' => 'James'));
-        $document
-            ->merge($data)
-            ->save('/tmp/output2.pdf');
-    }
 
     public function testAppend()
     {
@@ -57,13 +41,15 @@ class DocumentTest extends WebTestCase
         $this->assertEquals('/tmp/output3.pdf', $document->getFile()->getPathname());
 
         $document1 = $this->factory->open('/tmp/output1.pdf');
-        $document2 = $this->factory->open('/tmp/output2.pdf');
+        $document2 = $this->factory->open('/tmp/output4.pdf');
         $document3 = $this->factory->open('/tmp/output3.pdf');
+        $image = $this->factory->open('/tmp/image.pdf');
 
         $document = $document1
             ->append($document2)
             ->append($document3)
-            ->save();
+            ->append($image)
+            ->save('/tmp/output3.2.pdf');
     }
 
     public function testAppendMultiple()
@@ -78,41 +64,6 @@ class DocumentTest extends WebTestCase
         $this->assertEquals('application/pdf', $document->getFile()->getMimeType());
     }
 
-    public function testMergeAndAppend()
-    {
-        $this->factory
-            ->open(__DIR__.'/../Fixtures/document.doc')
-            ->merge(new DocumentData(array('Name' => 'Bond')))
-            ->append($this->factory->open('/tmp/output1.pdf'))
-            ->save('/tmp/merge_and_append.pdf');
-    }
-
-    public function testMergeImageInDocx()
-    {
-        $document = $this->factory->open(__DIR__.'/../Fixtures/document.docx');
-
-        $image = Image::fromFilename(__DIR__.'/../Fixtures/photo.jpg');
-        $data = new DocumentData(array('Name' => 'Bond', 'FirstName' => 'James'));
-        $data->set('image:Photo', $image);
-
-        $document
-            ->merge($data)
-            ->save('/tmp/image.pdf');
-    }
-
-    public function testMergeImageInDocxFromString()
-    {
-        $document = $this->factory->open(__DIR__.'/../Fixtures/document.docx');
-
-        $image = Image::fromString(\file_get_contents(__DIR__.'/../Fixtures/photo.jpg'));
-        $data = new DocumentData(array('Name' => 'Bond', 'FirstName' => 'James'));
-        $data->set('image:Photo', $image);
-
-        $document
-            ->merge($data)
-            ->save('/tmp/image-from-string.pdf');
-    }
-
     public function testLayer()
     {
         $foreground = $this->factory->open(__DIR__.'/../Fixtures/output.pdf');
@@ -123,20 +74,5 @@ class DocumentTest extends WebTestCase
         $this->assertEquals('application/pdf', $document->getFile()->getMimeType());
     }
     
-    public function testGetMergeFields()
-    {
-        $document = $this->factory->open(__DIR__.'/../Fixtures/document.docx');
-        
-        $this->assertEquals(
-            array(
-                'Name',
-                'FirstName',
-                'image:Photo',
-                'BadGuys' => array(
-                    'BadGuyName'
-                )
-            ),
-            $document->getMergeFields()
-        );
-    }
+
 }

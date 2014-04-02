@@ -3,11 +3,6 @@
 <container xmlns="http://symfony.com/schema/dic/services"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
-
-    <parameters>
-        <parameter key="ddeboer_document_manipulation.manipulator.live_docx.class">Ddeboer\DocumentManipulationBundle\Manipulator\LiveDocxManipulator</parameter>
-    </parameters>
-
     <services>
 
         <service id="ddeboer_document_manipulation.factory"
@@ -19,13 +14,6 @@
                  class="Ddeboer\DocumentManipulationBundle\Manipulator\ManipulatorChain">
         </service>
 
-        <service id="ddeboer_document_manipulation.manipulator.live_docx"
-                 class="%ddeboer_document_manipulation.manipulator.live_docx.class%"
-                 abstract="true">
-            <argument type="service" id="ddeboer_document.manipulation.manipulator.live_docx.mail_merge" />
-            <tag name="ddeboer_document_manipulation.manipulator" />
-        </service>
-
         <service id="ddeboer_document_manipulation.manipulator.pdftk_manipulator"
                  class="Ddeboer\DocumentManipulationBundle\Manipulator\PdftkManipulator">
             <argument type="service" id="ddeboer_document_manipulation.pdftk" />
@@ -35,11 +23,6 @@
         <service id="ddeboer_document_manipulation.pdftk"
                  class="Ddeboer\DocumentManipulationBundle\Manipulator\PdftkManipulator\Pdftk">
             <argument>%ddeboer_document_manipulation.pdftk.binary%</argument>
-        </service>
-
-        <service id="ddeboer_document.manipulation.manipulator.live_docx.mail_merge"
-                 class="ZendService\LiveDocx\MailMerge"
-                 abstract="true">
         </service>
 
     </services>

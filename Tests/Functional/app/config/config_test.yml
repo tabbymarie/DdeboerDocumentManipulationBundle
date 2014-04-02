@@ -4,11 +4,3 @@ framework:
         storage_id: session.storage.mock_file
   secret: 'secret'
   trusted_proxies: ~
-
-ddeboer_document_manipulation:
-  livedocx:
-    username: user
-    password: pass
-
-parameters:
-  ddeboer_document_manipulation.manipulator.live_docx.class: Ddeboer\DocumentManipulationBundle\Tests\Functional\Mock\Manipulator\LiveDocxManipulator
