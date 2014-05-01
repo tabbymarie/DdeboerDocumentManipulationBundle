@@ -27,7 +27,6 @@ class Pdftk
         $this->pathToPdftk = $pathToPdftk;
         $this->tempDir = sys_get_temp_dir();
     }
-
     /**
      * Merge $inputFile with background $backgroundFile
      *

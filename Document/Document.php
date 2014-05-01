@@ -98,11 +98,16 @@ class Document implements DocumentInterface
      */
     public function save($filename = null)
     {
+
         if (!$filename) {
             return $this->move(sys_get_temp_dir());
         } else {
             return $this->move(\dirname($filename), \basename($filename));
         }
+    }
+    public function copy($src,$dest)
+    {
+        return copy($src, $dest);
     }
 
     /**

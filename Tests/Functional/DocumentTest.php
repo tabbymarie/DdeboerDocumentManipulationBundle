@@ -3,9 +3,6 @@
 namespace Ddeboer\DocumentManipulationBundle\Tests\Functional;
 
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Ddeboer\DocumentManipulationBundle\Document\Document;
-use Ddeboer\DocumentManipulationBundle\Document\DocumentData;
-use Ddeboer\DocumentManipulationBundle\Document\Image;
 use Ddeboer\DocumentManipulationBundle\Document\File;
 
 /**
