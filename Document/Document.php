@@ -1,199 +1,114 @@
 <?php
 
-namespace Ddeboer\DocumentManipulationBundle\Document;
-
-use Ddeboer\DocumentManipulationBundle\Manipulator\ManipulatorChain;
-use Ddeboer\DocumentManipulationBundle\File\File;
+namespace Ddeboer\DocumentManipulationBundle\Manipulator\PdftkManipulator;
 
 /**
- * {@inheritdoc}
-*/
-class Document implements DocumentInterface
+ * A simple wrapper around the pdftk command line utility
+ *
+ * @see http://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/
+ * @see http://www.pdflabs.com/docs/pdftk-man-page/
+ */
+class Pdftk
 {
-    protected $type;
-
     /**
-     * @var ManipulatorChain
-     */
-    protected $manipulators;
-
-    /**
-     * @var File
-     */
-    protected $file;
-
-    /**
-     * Constructor
+     * Path to the pdftk binary
      *
-     * For easy construction, use the DocumentFactory.
-     *
-     * @param ManipulatorChain $manipulators Chain of manipulators
-     * @param File             $file         File
+     * @var string
      */
-    public function __construct(ManipulatorChain $manipulators, File $file)
+    protected $pathToPdftk;
+
+    /**
+     * Construct pdftk service
+     *
+     * @param string $pathToPdftk   Path to the pdftk binary
+     */
+    public function __construct($pathToPdftk)
     {
-        $this->manipulators = $manipulators;
-        $this->file = $file;
+        $this->pathToPdftk = $pathToPdftk;
+        $this->tempDir = sys_get_temp_dir();
+    }
+    /**
+     * Merge $inputFile with background $backgroundFile
+     *
+     * @param string $inputFile
+     * @param string $backgroundFile
+     * @param string $outputFile        Optional
+     * @return string       Path to the output file
+     */
+    public function background($inputFile, $backgroundFile, $outputFile = null)
+    {
+        return $this->execute(escapeshellarg($inputFile) . ' background '
+                             . escapeshellarg($backgroundFile), $outputFile);
+
     }
 
     /**
+     * Reads a single, input PDF file and reports various statistics, metadata,
+     * bookmarks (a/k/a outlines), and page labels to the given output filename
+     * or (if no output is given) to stdout. Non-ASCII characters are encoded
+     * as XML numerical entities. Does not create a new PDF.
      *
-     * @return File
+     * @param string $file
+     * @return array        Data about the PDF file
      */
-    public function getFile()
+    public function dumpData($file)
     {
-        return $this->file;
-    }
+        $outputFile = $this->execute("'{$file}' dump_data_utf8");
+        $output = file_get_contents($outputFile);
 
-    public function setType($type)
-    {
-        $this->type = $type;
+        $returnData = array();
+        $lines = explode(PHP_EOL, $output);
+        foreach ($lines as $line) {
+            if (!empty($line)) {
+                $splitLine = explode(': ', $line);
+                $returnData[$splitLine[0]] = $splitLine[1];
+            }
+        }
+        return $returnData;
     }
 
     /**
-     * {@inheritdoc}
+     * Merge, i.e., concatenate two or more PDF files
+     *
+     * @param array $files
      */
-    public function getType()
+    public function merge(array $files, $outputFile = null)
     {
-        switch ($this->file->getMimeType()) {
-            case 'application/pdf':
-                return self::TYPE_PDF;
-            case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-                return self::TYPE_DOCX;
-            case 'application/msword':
-            case 'application/zip':
-                if ('docx' == $this->file->getExtension()) {
-                    return self::TYPE_DOCX;
-                }
-                return self::TYPE_DOC;
-            case 'text/rtf':
-            case 'application/rtf':
-                return self::TYPE_RTF;
-            default:
-                break;
+        $escaped = array();
+        foreach ($files as $file) {
+            $escaped[] = escapeshellarg($file);
         }
 
-        return $this->type;
-    }
-
-    public function move($directory, $filename = null)
-    {
-        $this->file = File::fromFilename($this->file->move($directory, $filename));
-
-        return $this;
-    }
-
-    public function isDoc()
-    {
-        return DocumentInterface::TYPE_DOC === $this->getType();
-    }
-
-    public function isPdf()
-    {
-        return DocumentInterface::TYPE_PDF === $this->getType();
+        return $this->execute(implode(' ', $escaped), $outputFile);
     }
 
     /**
-     * {@inheritdoc}
-     */
-    public function save($filename = null)
-    {
-
-        if (!$filename) {
-            return $this->move(sys_get_temp_dir());
-        } else {
-            return $this->move(\dirname($filename), \basename($filename));
-        }
-    }
-    public function copy($src,$dest)
-    {
-        return copy($src, $dest);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function merge(DocumentData $data)
-    {
-        return $this->manipulators->merge($this, $data);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function append(DocumentInterface $document)
-    {
-        return $this->manipulators->append($this, $document);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function appendMultiple(array $documents)
-    {
-        return $this->manipulators->appendMultiple($this, $documents);
-    }
-
-    /**
-     * Append this document to another document
+     * Generate a temporary file name
      *
-     * @return DocumentInterface
+     * @return string   Temporary file name
      */
-    public function appendTo(DocumentInterface $document)
+    protected function generateTemporaryFilename()
     {
-        throw new \Exception('Not yet implemented');
+        return tempnam($this->tempDir, 'pdftk');
     }
 
     /**
-     * {@inheritdoc}
+     * Execute a pdftk command and return the path to the output file
+     *
+     * @param string $argumentString
+     * @param string $outputFile        Optional, if not specified, will be
+     *                                  generated
+     * @return string   Path to the output file
      */
-    public function prepend(DocumentInterface $document)
+    protected function execute($argumentString, $outputFile = null)
     {
-        throw new \Exception('Not yet implemented');
-    }
+        if (!$outputFile) {
+            $outputFile = $this->generateTemporaryFilename();
+        }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function prependMultiple(array $documents)
-    {
-        throw new \Exception('Not yet implemented');
-    }
+        $command = escapeshellcmd("{$this->pathToPdftk} {$argumentString} output {$outputFile}");
+        $return = exec($command, $output, $returnVar);
 
-    /**
-     * {@inheritdoc}
-     */
-    public function prependTo(DocumentInterface $document)
-    {
-        throw new \Exception('Not yet implemented');
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function putInFront(DocumentInterface $background)
-    {
-        return $this->manipulators->layer($this, $background);
-    }
-    
-    /**
-     * {@inheritdoc}
-     */
-    public function getMergeFields()
-    {
-        return $this->manipulators->getMergeFields($this);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function putBehind(DocumentInterface $foreground)
-    {
-        throw new \Exception('Not yet implemented');
-    }
-
-    public function getContents()
-    {
-        return $this->file->getContents();
+        return $outputFile;
     }
 }
