@@ -38,7 +38,7 @@ class Pdftk
     public function background($inputFile, $backgroundFile, $outputFile = null)
     {
         return $this->execute(escapeshellarg($inputFile) . ' background '
-                             . escapeshellarg($backgroundFile), $outputFile);
+            . escapeshellarg($backgroundFile), $outputFile);
 
     }
 
@@ -89,7 +89,7 @@ class Pdftk
      */
     protected function generateTemporaryFilename()
     {
-        return tempnam($this->tempDir, 'pdftk') . '.pdf';
+        return tempnam($this->tempDir, 'pdftk');
     }
 
     /**
@@ -108,10 +108,6 @@ class Pdftk
 
         $command = escapeshellcmd("{$this->pathToPdftk} {$argumentString} output {$outputFile}");
         $return = exec($command, $output, $returnVar);
-
-        if ($returnVar !== 0) {
-            throw new \Exception('pdftk: non-zero return value');
-        }
 
         return $outputFile;
     }
