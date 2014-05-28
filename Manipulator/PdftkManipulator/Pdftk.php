@@ -89,7 +89,7 @@ class Pdftk
      */
     protected function generateTemporaryFilename()
     {
-        return tempnam($this->tempDir, 'pdftk');
+        return tempnam($this->tempDir, 'pdftk') . '.pdf';
     }
 
     /**
@@ -108,6 +108,10 @@ class Pdftk
 
         $command = escapeshellcmd("{$this->pathToPdftk} {$argumentString} output {$outputFile}");
         $return = exec($command, $output, $returnVar);
+
+        if ($returnVar !== 0) {
+            throw new \Exception('pdftk: non-zero return value');
+        }
 
         return $outputFile;
     }
